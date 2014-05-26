@@ -2,8 +2,6 @@ package com.capgemini.ktestmachine.component.diffmanager.filesystem.ftp;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
 import com.capgemini.ktestmachine.component.diffmanager.DiffManager;
 import com.capgemini.ktestmachine.component.diffmanager.filesystem.DirInfo;
@@ -105,83 +103,4 @@ public abstract class ADiffManagerFtpFwk implements DiffManager {
 		this.ftpPassword = ftpPassword;
 	}
 
-	protected static class ItemImpl implements Item, Cloneable {
-		private String name;
-		private long index;
-		private Status status;
-		private Map<String, String> parameters = new TreeMap<String, String>();
-
-		public ItemImpl(Item item) {
-			name = item.getName();
-			index = item.getIndex();
-			status = item.getStatus();
-			parameters.putAll(item.getParameters());
-		}
-
-		public ItemImpl(String name) {
-			this.name = name;
-		}
-
-		public String getName() {
-			return name;
-		}
-
-		public long getIndex() {
-			return index;
-		}
-
-		public Status getStatus() {
-			return status;
-		}
-
-		public void setIndex(long index) {
-			this.index = index;
-		}
-
-		public void setStatus(Status status) {
-			this.status = status;
-		}
-
-		public Map<String, String> getParameters() {
-			return parameters;
-		}
-
-		public ItemImpl clone() {
-			ItemImpl item = new ItemImpl(name);
-			item.index = index;
-			item.status = status;
-			item.getParameters().putAll(parameters);
-			return item;
-		}
-	}
-
-	protected static class GroupImpl implements Group, Comparable<Group> {
-		private String name;
-		private long lastIndex;
-		private List<Item> items = new ArrayList<Item>();
-
-		public GroupImpl(String name) {
-			this.name = name;
-		}
-
-		public List<Item> getItems() {
-			return items;
-		}
-
-		public String getName() {
-			return name;
-		}
-
-		public long getLastIndex() {
-			return lastIndex;
-		}
-
-		public void setLastIndex(long lastIndex) {
-			this.lastIndex = lastIndex;
-		}
-
-		public int compareTo(Group group) {
-			return name.compareTo(group.getName());
-		}
-	}
 }

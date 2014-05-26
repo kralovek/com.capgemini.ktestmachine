@@ -15,6 +15,7 @@ public abstract class ATestReporterExcelFwk extends ATestExcelFwk {
 
 	protected ExcelAdapter excelAdapter;
 	protected File dir;
+	// Not configurable
 	protected StructureSheetGeneric structureSheet;
 
 	protected ExcelStylesFactory excelStylesFactory;

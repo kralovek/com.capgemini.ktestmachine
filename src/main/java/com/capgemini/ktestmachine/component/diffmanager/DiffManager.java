@@ -12,16 +12,19 @@ public interface DiffManager {
 		NEW, UPD, DEL, UNK
 	}
 	
+	interface Index {
+	}
+	
 	interface Item {
 		String getName();
-		long getIndex();
+		Index getIndex();
 		Status getStatus();
 		Map<String, String> getParameters();
 	}
 
 	interface Group {
 		String getName();
-		long getLastIndex();
+		Index getLastIndex();
 		List<Item> getItems();
 	}
 

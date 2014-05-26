@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
@@ -15,8 +13,8 @@ import com.capgemini.ktestmachine.component.diffmanager.DiffManager;
 import com.capgemini.ktestmachine.component.diffmanager.filesystem.DirInfo;
 import com.capgemini.ktestmachine.exception.ABaseException;
 
-
-public class DiffManagerFilesystem extends ADiffManagerFilesystemFwk implements DiffManager {
+public class DiffManagerFilesystem extends ADiffManagerFilesystemFwk implements
+		DiffManager {
 	private static final Logger LOGGER = Logger
 			.getLogger(DiffManagerFilesystem.class);
 
@@ -27,78 +25,6 @@ public class DiffManagerFilesystem extends ADiffManagerFilesystemFwk implements 
 			return item1.getName().compareTo(item2.getName());
 		}
 	};
-
-	private static class ItemImpl implements Item {
-		private String name;
-		private long index;
-		private Status status;
-		private Map<String, String> parameters = new TreeMap<String, String>();
-
-		public ItemImpl(Item item) {
-			name = item.getName();
-			index = item.getIndex();
-			status = item.getStatus();
-			parameters.putAll(item.getParameters());
-		}
-
-		public ItemImpl(String name) {
-			this.name = name;
-		}
-
-		public String getName() {
-			return name;
-		}
-
-		public long getIndex() {
-			return index;
-		}
-
-		public Status getStatus() {
-			return status;
-		}
-
-		public void setIndex(long index) {
-			this.index = index;
-		}
-
-		public void setStatus(Status status) {
-			this.status = status;
-		}
-
-		public Map<String, String> getParameters() {
-			return parameters;
-		}
-	}
-
-	private static class GroupImpl implements Group, Comparable<Group> {
-		private String name;
-		private long lastIndex;
-		private List<Item> items = new ArrayList<Item>();
-
-		public GroupImpl(String name) {
-			this.name = name;
-		}
-
-		public List<Item> getItems() {
-			return items;
-		}
-
-		public String getName() {
-			return name;
-		}
-
-		public long getLastIndex() {
-			return lastIndex;
-		}
-
-		public void setLastIndex(long lastIndex) {
-			this.lastIndex = lastIndex;
-		}
-
-		public int compareTo(Group group) {
-			return name.compareTo(group.getName());
-		}
-	}
 
 	public List<Group> loadDiffs(List<Group> groupStates) throws ABaseException {
 		LOGGER.trace("BEGIN");
@@ -124,15 +50,15 @@ public class DiffManagerFilesystem extends ADiffManagerFilesystemFwk implements 
 		LOGGER.trace("BEGIN");
 		try {
 			File dir = new File(dirInfo.getPath());
-			long date = groupState != null ? groupState.getLastIndex()
-					: 0;
+			long date = groupState != null ? ((IndexImpl) groupState
+					.getLastIndex()).getMs() : 0;
 
 			List<Item> items = null;
 
 			if (dirInfo.isContent() && groupState != null
 					&& groupState.getItems() != null) {
-				List<ItemImpl> existingItems = getItems(dir,
-						dir, 0, dirInfo.getPattern());
+				List<ItemImpl> existingItems = getItems(dir, dir, 0,
+						dirInfo.getPattern());
 
 				items = new ArrayList<Item>();
 
@@ -140,7 +66,8 @@ public class DiffManagerFilesystem extends ADiffManagerFilesystemFwk implements 
 					ItemImpl existingItem = findItem(existingItems,
 							itemState.getName());
 					if (existingItem != null) {
-						if (existingItem.getIndex() <= itemState.getIndex()) {
+						if (((IndexImpl) existingItem.getIndex()).getMs() <= ((IndexImpl) itemState
+								.getIndex()).getMs()) {
 							existingItems.remove(existingItem);
 						} else {
 							existingItem.setStatus(Status.UPD);
@@ -155,15 +82,17 @@ public class DiffManagerFilesystem extends ADiffManagerFilesystemFwk implements 
 				items.addAll(existingItems);
 				Collections.sort(items, comparatorItem);
 			} else {
-				List<ItemImpl> existingItems = getItems(dir,
-						dir, date, dirInfo.getPattern());
+				List<ItemImpl> existingItems = getItems(dir, dir, date,
+						dirInfo.getPattern());
 				items = new ArrayList<Item>();
 				items.addAll(existingItems);
 			}
 
 			long lastModified = getLastModified(items);
 			GroupImpl group = new GroupImpl(dirInfo.getName());
-			group.setLastIndex(lastModified);
+			IndexImpl indexImpl = new IndexImpl();
+			indexImpl.setMs(lastModified);
+			group.setLastIndex(indexImpl);
 			group.getItems().addAll(items);
 			LOGGER.trace("OK");
 			return group;
@@ -221,9 +150,11 @@ public class DiffManagerFilesystem extends ADiffManagerFilesystemFwk implements 
 		try {
 			File dir = new File(dirInfo.getPath());
 			GroupImpl group = new GroupImpl(dirInfo.getName());
-			long lastModified = getLastModifiedDirectory(dir,
-					dir, 0, dirInfo.getPattern());
-			group.setLastIndex(lastModified);
+			long lastModified = getLastModifiedDirectory(dir, dir, 0,
+					dirInfo.getPattern());
+			IndexImpl indexImpl = new IndexImpl();
+			indexImpl.setMs(lastModified);
+			group.setLastIndex(indexImpl);
 			LOGGER.trace("OK");
 			return group;
 		} finally {
@@ -254,7 +185,9 @@ public class DiffManagerFilesystem extends ADiffManagerFilesystemFwk implements 
 				}
 
 				ItemImpl item = new ItemImpl(path);
-				item.setIndex(file.lastModified());
+				IndexImpl indexImpl = new IndexImpl();
+				indexImpl.setMs(file.lastModified());
+				item.setIndex(indexImpl);
 				item.setStatus(Status.NEW);
 				items.add(item);
 			} else if (file.isDirectory()) {
@@ -314,8 +247,8 @@ public class DiffManagerFilesystem extends ADiffManagerFilesystemFwk implements 
 		long lastModified = 0;
 		for (Item item : items) {
 			// To je divny ... ta podminka ma byt naopak !!!
-			if (lastModified > item.getIndex()) {
-				lastModified = item.getIndex();
+			if (lastModified > ((IndexImpl) item.getIndex()).getMs()) {
+				lastModified = ((IndexImpl) item.getIndex()).getMs();
 			}
 		}
 		return lastModified;

@@ -18,8 +18,6 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 import com.capgemini.ktestmachine.component.diffmanager.DiffManager;
-import com.capgemini.ktestmachine.component.diffmanager.database.GroupImpl;
-import com.capgemini.ktestmachine.component.diffmanager.database.ItemCruid;
 import com.capgemini.ktestmachine.exception.ABaseException;
 import com.capgemini.ktestmachine.exception.TechnicalException;
 import com.capgemini.ktestmachine.utils.database.ConstantsDatabase;
@@ -35,7 +33,7 @@ public class DiffManagerDatabaseTrigger extends ADiffManagerDatabaseTriggerFwk
 	private static final DateFormat DATE_FORMAT_STRING = new SimpleDateFormat(
 			"HH:mm:ss.SSS dd/MM/yyyy");
 
-	private static final String KTU_PREFIX_PK = "KTU_PK_";
+	private static final String KTM_PREFIX_PK = "KTM_PK_";
 
 	private static final char STATE_UNKNOWN = '-';
 	private static final char STATE_INSERT = 'I';
@@ -102,12 +100,12 @@ public class DiffManagerDatabaseTrigger extends ADiffManagerDatabaseTriggerFwk
 				for (TableInfo tableInfo : tableInfos) {
 					Group groupState = findGroup(groupStates,
 							tableInfo.getName());
-					long date = groupState != null ? groupState.getLastIndex()
-							: 0;
-					Group group = readDiffTable(connection, tableInfo, date);
+					IndexImpl index = groupState != null ? (IndexImpl) groupState
+							.getLastIndex() : null;
+					Group group = readDiffTable(connection, tableInfo, index);
 					groups.add(group);
 
-					cleanTriggeredTable(date, tableInfo, connection);
+					cleanTriggeredTable(index, tableInfo, connection);
 				}
 
 				connection.close();
@@ -168,10 +166,16 @@ public class DiffManagerDatabaseTrigger extends ADiffManagerDatabaseTriggerFwk
 		LOGGER.trace("BEGIN");
 		String triggeredTableSchemaName = null;
 		try {
+			if ("M2OVOIE"
+					.equalsIgnoreCase(tableInfo.getName())) {
+				int k = 0;
+			}
+
+
 			Statement statement = null;
 			ResultSet resultSet = null;
 			triggeredTableSchemaName = getTriggeredTableSchemaName(tableInfo);
-			String query = "SELECT max(KTU_TS) FROM "
+			String query = "SELECT max(KTM_TS) FROM "
 					+ triggeredTableSchemaName;
 			GroupImpl group = new GroupImpl(tableInfo.getName());
 
@@ -181,20 +185,22 @@ public class DiffManagerDatabaseTrigger extends ADiffManagerDatabaseTriggerFwk
 				statement = connection.createStatement();
 				resultSet = statement.executeQuery(query);
 
-				long index = 0;
+				Timestamp index = null;
 				if (resultSet.next()) {
 					try {
-						Timestamp ts = resultSet.getTimestamp(1);
-						index = ts != null ? ts.getTime() : 0;
+						index = resultSet.getTimestamp(1);
 						LOGGER.debug("max ID: " + index);
 					} catch (SQLException ex) {
 						throw new TechnicalException(
-								"The KTU_TS is NULL ot is not a TIMESTAMP in the table: "
+								"The KTM_TS is NULL ot is not a TIMESTAMP in the table: "
 										+ triggeredTableSchemaName);
 					}
 				}
 
-				group.setLastIndex(index);
+				IndexImpl indexImpl = new IndexImpl();
+				indexImpl.setTimestamp(index);
+
+				group.setLastIndex(indexImpl);
 
 				resultSet.close();
 				statement.close();
@@ -229,12 +235,12 @@ public class DiffManagerDatabaseTrigger extends ADiffManagerDatabaseTriggerFwk
 	}
 
 	private String getTriggeredTableSchemaName(TableInfo tableInfo) {
-		return (tableInfo.getKtuSchema() != null ? tableInfo.getKtuSchema()
+		return (tableInfo.getKtmSchema() != null ? tableInfo.getKtmSchema()
 				+ "." : "")
-				+ tableInfo.getKtuNamePrefix() + tableInfo.getName();
+				+ tableInfo.getKtmNamePrefix() + tableInfo.getName();
 	}
 
-	private void cleanTriggeredTable(long index, TableInfo tableInfo,
+	private void cleanTriggeredTable(IndexImpl index, TableInfo tableInfo,
 			Connection connection) throws ABaseException {
 		LOGGER.trace("BEGIN");
 		try {
@@ -242,13 +248,13 @@ public class DiffManagerDatabaseTrigger extends ADiffManagerDatabaseTriggerFwk
 
 			String triggeredTableName = getTriggeredTableSchemaName(tableInfo);
 			String query = "DELETE FROM " + triggeredTableName
-					+ " WHERE KTU_TS < ?";
+					+ " WHERE KTM_TS < ?";
 
 			try {
 				LOGGER.debug("QUERY: " + query);
 
 				statement = connection.prepareStatement(query);
-				statement.setTimestamp(1, new Timestamp(index));
+				statement.setTimestamp(1, index.getTimestamp());
 
 				statement.executeUpdate();
 				statement.close();
@@ -266,14 +272,24 @@ public class DiffManagerDatabaseTrigger extends ADiffManagerDatabaseTriggerFwk
 	}
 
 	private Group readDiffTable(Connection connection, TableInfo tableInfo,
-			long index) throws ABaseException {
+			IndexImpl index) throws ABaseException {
 		LOGGER.trace("BEGIN");
 		try {
+			LOGGER.debug("Table: " + tableInfo.getName());
+			
+			if ("M2OVOIE"
+					.equalsIgnoreCase(tableInfo.getName())) {
+				int k = 0;
+			}
+
 			List<PK> listPks = new ArrayList<PK>();
-			List<ItemCruid> groupCruid = new ArrayList<ItemCruid>();
 			PreparedStatement statement = null;
 			ResultSet resultSet = null;
 			try {
+				if (index.getTimestamp() == null) {
+					index.setTimestamp(new Timestamp(0L));
+				}
+				
 				GroupImpl group = new GroupImpl(tableInfo.getName());
 
 				String triggeredTableSchemaName = getTriggeredTableSchemaName(tableInfo);
@@ -283,24 +299,26 @@ public class DiffManagerDatabaseTrigger extends ADiffManagerDatabaseTriggerFwk
 
 				String query = "" //
 						+ " SELECT * FROM (" //
-						+ "   SELECT KTU_STATE, KTU_TS, "
+						+ "   SELECT KTM_STATE, KTM_TS, "
 						+ sqlListPKs //
 						+ "   FROM "
 						+ triggeredTableSchemaName //
-						+ "   WHERE KTU_TS > ?"
+						+ "   WHERE KTM_TS > ?"
 						+ " ) tt" //
 						+ " LEFT JOIN " + tableSchemaName
 						+ " t ON "
 						+ toSqlListJoinKtuPKs(tableInfo, "t", "tt") //
-						+ " ORDER BY tt.KTU_TS ASC" //
+						+ " ORDER BY tt.KTM_TS ASC" //
 				;
 
 				String queryRep = query.replaceFirst("\\?",
-						toStringSqlDate(index));
+						toString(index.getTimestamp()));
 
 				statement = connection.prepareStatement(query);
 
-				statement.setTimestamp(1, new Timestamp(index));
+				Timestamp indexTimestamp = index.getTimestamp();
+				LOGGER.debug("timestamp: " + indexTimestamp);
+				statement.setTimestamp(1, indexTimestamp);
 
 				LOGGER.debug("QUERY: " + queryRep);
 
@@ -315,8 +333,9 @@ public class DiffManagerDatabaseTrigger extends ADiffManagerDatabaseTriggerFwk
 					itemCruid.setStatus(status);
 
 					Timestamp timestamp = resultSet.getTimestamp(2);
-					itemCruid.setIndex(timestamp != null ? timestamp.getTime()
-							: 0);
+					IndexImpl indexImpl = new IndexImpl();
+					indexImpl.setTimestamp(timestamp);
+					itemCruid.setIndex(indexImpl);
 
 					List<String> valuesPK = new ArrayList<String>();
 
@@ -324,7 +343,7 @@ public class DiffManagerDatabaseTrigger extends ADiffManagerDatabaseTriggerFwk
 						boolean isPK = false;
 						String columnName = metaData.getColumnName(i);
 						if (i <= 2 + tableInfo.getColumnsPK().size()) {
-							columnName = columnName.substring(KTU_PREFIX_PK
+							columnName = columnName.substring(KTM_PREFIX_PK
 									.length());
 							isPK = true;
 						} else {
@@ -377,8 +396,6 @@ public class DiffManagerDatabaseTrigger extends ADiffManagerDatabaseTriggerFwk
 					pk.getItemCruids().add(itemCruid);
 					listPks.add(pk);
 				}
-
-				LOGGER.debug("Items: " + groupCruid.size());
 
 				if (tableInfo.getJoinStatus()) {
 					groupByStatus(group, listPks);
@@ -435,7 +452,7 @@ public class DiffManagerDatabaseTrigger extends ADiffManagerDatabaseTriggerFwk
 			if (buffer.length() != 0) {
 				buffer.append(',');
 			}
-			buffer.append(KTU_PREFIX_PK).append(columnPK);
+			buffer.append(KTM_PREFIX_PK).append(columnPK);
 		}
 		return buffer.toString();
 	}
@@ -448,14 +465,14 @@ public class DiffManagerDatabaseTrigger extends ADiffManagerDatabaseTriggerFwk
 				buffer.append(" AND ");
 			}
 			buffer.append(aliasTriggeredTable).append('.')
-					.append(KTU_PREFIX_PK).append(columnPK).append(" = ")
+					.append(KTM_PREFIX_PK).append(columnPK).append(" = ")
 					.append(aliasTable).append('.').append(columnPK);
 		}
 		return buffer.toString();
 	}
 
-	private String toStringSqlDate(long ms) {
-		return "to_timestamp('" + DATE_FORMAT_TODATE.format(new Date(ms))
+	private String toString(Timestamp timestamp) {
+		return "to_timestamp('" + DATE_FORMAT_TODATE.format(timestamp)
 				+ "','YYYYMMDD HH24MISS FF')";
 	}
 

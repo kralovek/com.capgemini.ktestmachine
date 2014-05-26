@@ -46,8 +46,10 @@ public class DiffManagerDatabase extends ADiffManagerDatabaseFwk implements
 				for (TableInfo tableInfo : tableInfos) {
 					Group groupState = findGroup(groupStates,
 							tableInfo.getName());
-					long date = groupState != null ? groupState.getLastIndex()
-							: 0;
+
+					IndexImpl lastIndexImpl = (IndexImpl) groupState.getLastIndex();
+
+					long date = groupState != null ? lastIndexImpl.getMs() : 0L;
 					Group group = readDiffTable(connection, tableInfo, date);
 					groups.add(group);
 				}
@@ -206,7 +208,9 @@ public class DiffManagerDatabase extends ADiffManagerDatabaseFwk implements
 					}
 					}
 
-					itemCruid.setIndex(indexSort);
+					IndexImpl indexSortImpl = new IndexImpl();
+					indexSortImpl.setMs(indexSort);
+					itemCruid.setIndex(indexSortImpl);
 
 					for (int i = 1; i <= metaData.getColumnCount(); i++) {
 						String columnName = metaData.getColumnName(i);
@@ -338,7 +342,10 @@ public class DiffManagerDatabase extends ADiffManagerDatabaseFwk implements
 					}
 					}
 
-					group.setLastIndex(index);
+					IndexImpl indexImpl = new IndexImpl();
+					indexImpl.setMs(index);
+
+					group.setLastIndex(indexImpl);
 				} else {
 					throw new TechnicalException("No line in the result set: "
 							+ query);

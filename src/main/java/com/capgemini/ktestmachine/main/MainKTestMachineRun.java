@@ -26,6 +26,9 @@ public class MainKTestMachineRun {
 			try {
 				ConfigKTestMachine config = new ConfigKTestMachine(pArgs);
 
+				LOGGER.info("CONFIG: ");
+				LOGGER.info(config.toString());
+				
 				BeanFactory beanFactory = UtilsBean.getInstance().createBeanFactory(config.getConfig(), config.getProperties());
 
 				workRun(beanFactory, config);

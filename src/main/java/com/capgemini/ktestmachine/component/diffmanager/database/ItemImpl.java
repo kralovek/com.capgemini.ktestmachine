@@ -8,7 +8,7 @@ import com.capgemini.ktestmachine.component.diffmanager.DiffManager.Status;
 
 public class ItemImpl implements Item, Comparable<Item> {
 	private String name;
-	private long index;
+	private IndexImpl index;
 	private Status status;
 	private Map<String, String> parameters = new TreeMap<String, String>();
 
@@ -20,7 +20,7 @@ public class ItemImpl implements Item, Comparable<Item> {
 		return name;
 	}
 
-	public long getIndex() {
+	public IndexImpl getIndex() {
 		return index;
 	}
 
@@ -28,7 +28,7 @@ public class ItemImpl implements Item, Comparable<Item> {
 		return status;
 	}
 
-	public void setIndex(long index) {
+	public void setIndex(IndexImpl index) {
 		this.index = index;
 	}
 

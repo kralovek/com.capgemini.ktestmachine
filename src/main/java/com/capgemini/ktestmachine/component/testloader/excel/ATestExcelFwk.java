@@ -14,8 +14,6 @@ public abstract class ATestExcelFwk {
 
 	private boolean configured;
 
-	protected Set<String> ignoredSheets;
-
 	private String columnParameter;
 	protected int idColumnParameter;
 
@@ -28,15 +26,18 @@ public abstract class ATestExcelFwk {
 	private Integer rowActiv;
 	protected int idRowActive;
 
-	private Set<Integer> ignoredRows;
-	protected Set<Integer> ignoredIdColumns;
-
-	private Set<String> ignoredColumns;
-	protected Set<Integer> ignoredIdRows;
-
 	private String dateFormat;
 	private DateFormat dateFormatPattern;
 
+	protected Set<String> ignoredSheets;
+
+	private Set<Integer> ignoredRows;
+	protected Set<Integer> ignoredIdRows;
+
+	private Set<String> ignoredColumns;
+	protected Set<Integer> ignoredIdColumns;
+
+	// Not configurable
 	protected ExcelValueManager excelValueManager;
 
 	public void config() throws ConfigurationException {

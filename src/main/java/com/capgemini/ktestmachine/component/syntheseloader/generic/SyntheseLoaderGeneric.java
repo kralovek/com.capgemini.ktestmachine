@@ -26,8 +26,10 @@ public class SyntheseLoaderGeneric extends SyntheseLoaderGenericFwk implements
 			List<TestInput> testInputs = testLoader.loadTests(source);
 
 			List<TestResult> testResults = null;
-			if (testReporter != null) {
-				testResults = testReporter.loadResults(source, batchId);
+			if (batchId != null) {
+				if (testReporter != null) {
+					testResults = testReporter.loadResults(source, batchId);
+				}
 			}
 
 			for (TestInput testInput : testInputs) {

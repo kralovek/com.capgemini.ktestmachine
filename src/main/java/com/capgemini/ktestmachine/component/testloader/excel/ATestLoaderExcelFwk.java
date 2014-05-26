@@ -10,6 +10,7 @@ public abstract class ATestLoaderExcelFwk extends ATestExcelFwk {
 
 	protected ExcelAdapter excelAdapter;
 
+	// Not configurable
 	protected StructureSheetGeneric structureSheet;
 
 	private Integer rowName;
@@ -49,7 +50,7 @@ public abstract class ATestLoaderExcelFwk extends ATestExcelFwk {
 		super.testConfigured();
 		if (!configured) {
 			throw new IllegalStateException(this.getClass().getName()
-					+ ": Le composant n'est pas configur�.");
+					+ ": The component is not configured.");
 		}
 	}
 

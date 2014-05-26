@@ -6,5 +6,5 @@ import com.capgemini.ktestmachine.data.Synthese;
 import com.capgemini.ktestmachine.exception.ABaseException;
 
 public interface SyntheseLoader {
-	List<Synthese> loadSyntheses(String source, String result) throws ABaseException;
+	List<Synthese> loadSyntheses(String source, String batchId) throws ABaseException;
 }

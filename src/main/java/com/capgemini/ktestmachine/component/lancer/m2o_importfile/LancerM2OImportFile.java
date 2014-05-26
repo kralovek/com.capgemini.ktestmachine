@@ -381,8 +381,7 @@ public class LancerM2OImportFile extends ALancerM2OImportFileFwk implements
 								.append("<ITEM ")
 								.append("name=\"" + item.getName() + "\" ")
 								.append("status=\"" + item.getStatus() + "\" ")
-								.append("index=\""
-										+ DATE_FORMAT.format(item.getIndex())
+								.append("index=\"" + item.getIndex().toString()
 										+ "\" ").append(">").append("\n");
 						if (item.getParameters() != null) {
 							for (Map.Entry<String, String> entryParameter : item

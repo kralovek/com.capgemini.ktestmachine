@@ -63,7 +63,7 @@ public class DiffManagerFtp extends ADiffManagerFtpFwk {
 			Group groupState) throws ABaseException {
 		LOGGER.trace("BEGIN");
 		try {
-			long date = groupState != null ? groupState.getLastIndex()
+			long date = groupState != null ? ((IndexImpl) groupState.getLastIndex()).getMs()
 					: 0;
 			List<Item> items = null;
 			if (dirInfo.isContent() && groupState != null
@@ -78,7 +78,7 @@ public class DiffManagerFtp extends ADiffManagerFtpFwk {
 					ItemImpl existingItem = findItem(existingItems,
 							itemState.getName());
 					if (existingItem != null) {
-						if (existingItem.getIndex() <= itemState.getIndex()) {
+						if (((IndexImpl) existingItem.getIndex()).getMs() <= ((IndexImpl) itemState.getIndex()).getMs()) {
 							existingItems.remove(existingItem);
 						} else {
 							existingItem.setStatus(Status.UPD);
@@ -100,7 +100,9 @@ public class DiffManagerFtp extends ADiffManagerFtpFwk {
 
 			long lastModified = getLastModified(items);
 			GroupImpl group = new GroupImpl(dirInfo.getName());
-			group.setLastIndex(lastModified);
+			IndexImpl indexImpl = new IndexImpl();
+			indexImpl.setMs(lastModified);
+			group.setLastIndex(indexImpl);
 			group.getItems().addAll(items);
 			LOGGER.trace("OK");
 			return group;
@@ -164,7 +166,9 @@ public class DiffManagerFtp extends ADiffManagerFtpFwk {
 					dirInfo.getPath(), dirInfo.getPath(), 0,
 					dirInfo.getPattern());
 			GroupImpl group = new GroupImpl(dirInfo.getName());
-			group.setLastIndex(lastModified);
+			IndexImpl indexImpl = new IndexImpl();
+			indexImpl.setMs(lastModified);
+			group.setLastIndex(indexImpl);
 			LOGGER.trace("OK");
 			return group;
 		} finally {
@@ -202,7 +206,9 @@ public class DiffManagerFtp extends ADiffManagerFtpFwk {
 				}
 
 				ItemImpl item = new ItemImpl(path);
-				item.setIndex(file.getTimestamp().getTimeInMillis());
+				IndexImpl indexImpl = new IndexImpl();
+				indexImpl.setMs(file.getTimestamp().getTimeInMillis());
+				item.setIndex(indexImpl);
 				item.setStatus(Status.NEW);
 				items.add(item);
 			} else if (file.isDirectory()) {
@@ -287,8 +293,8 @@ public class DiffManagerFtp extends ADiffManagerFtpFwk {
 		long lastModified = 0;
 		for (Item item : items) {
 			// To je divny ... ta podminka ma byt naopak !!!
-			if (lastModified > item.getIndex()) {
-				lastModified = item.getIndex();
+			if (lastModified > ((IndexImpl) item.getIndex()).getMs()) {
+				lastModified = ((IndexImpl) item.getIndex()).getMs();
 			}
 		}
 		return lastModified;

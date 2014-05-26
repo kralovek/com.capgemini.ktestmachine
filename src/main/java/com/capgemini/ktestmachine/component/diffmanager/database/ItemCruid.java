@@ -10,7 +10,7 @@ import com.capgemini.ktestmachine.component.diffmanager.DiffManager.Status;
 
 public class ItemCruid {
 	private String name;
-	private long index;
+	private IndexImpl index;
 	private Status status;
 	private Map<String, Object> parameters = new TreeMap<String, Object>();
 
@@ -29,7 +29,7 @@ public class ItemCruid {
 		return name;
 	}
 
-	public long getIndex() {
+	public IndexImpl getIndex() {
 		return index;
 	}
 
@@ -37,7 +37,7 @@ public class ItemCruid {
 		return status;
 	}
 
-	public void setIndex(long index) {
+	public void setIndex(IndexImpl index) {
 		this.index = index;
 	}
 

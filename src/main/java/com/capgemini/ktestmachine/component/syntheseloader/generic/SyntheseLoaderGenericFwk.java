@@ -19,6 +19,7 @@ public abstract class SyntheseLoaderGenericFwk {
 		}
 
 		if (testReporter == null) {
+			// OK
 		}
 
 		configured = true;

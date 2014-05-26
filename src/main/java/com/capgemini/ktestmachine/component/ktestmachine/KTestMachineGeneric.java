@@ -19,8 +19,10 @@ import com.capgemini.ktestmachine.utils.errors.StopException;
 import com.capgemini.ktestmachine.utils.errors.TreatErrors;
 import com.capgemini.ktestmachine.utils.parameters.UtilsParameters;
 
-public class KTestMachineGeneric extends AKTestMachineGenericFwk implements KTestMachine {
-	private static final Logger LOGGER = Logger.getLogger(KTestMachineGeneric.class);
+public class KTestMachineGeneric extends AKTestMachineGenericFwk implements
+		KTestMachine {
+	private static final Logger LOGGER = Logger
+			.getLogger(KTestMachineGeneric.class);
 
 	private static final String PARAM_INPUT_DATA_STOP = "INPUT/DATA_STOP";
 
@@ -65,27 +67,37 @@ public class KTestMachineGeneric extends AKTestMachineGenericFwk implements KTes
 
 						if (!stoped) {
 							stoped = checkStop(testInput);
-							LOGGER.info("..............................");
-							LOGGER.info("Test:" + " (" + iTest + "/"
-									+ testsCount + ")" + " [ID: "
-									+ testInput.getId() + "]" + " [TYPE: "
-									+ testInput.getType() + "]" + " [SOURCE: "
-									+ testInput.getSource() + "]");
-
-							TestOutput testOutput = null;
-							Lancer lancer = chooseLancer(testInput.getType());
+							LOGGER.trace("BEGIN");
 							try {
-								testOutput = lancer.lance(testInput);
-							} catch (StopException ex) {
-								stoped = true;
-							}
-							resultTest = testReporter.reportTest(testOutput, // TODO: check testOutput = null
-									batchId);
-							resultAll = resultAll && resultTest;
-							if (resultTest) {
-								LOGGER.info(" * OK *");
-							} else {
-								LOGGER.info("## KO ##");
+								LOGGER.info("..............................");
+								LOGGER.info("Test:" + " (" + iTest + "/"
+										+ testsCount + ")" + " [ID: "
+										+ testInput.getId() + "]" + " [TYPE: "
+										+ testInput.getType() + "]"
+										+ " [SOURCE: " + testInput.getSource()
+										+ "]");
+
+								TestOutput testOutput = null;
+								Lancer lancer = chooseLancer(testInput
+										.getType());
+								try {
+									testOutput = lancer.lance(testInput);
+								} catch (StopException ex) {
+									stoped = true;
+								}
+								resultTest = testReporter.reportTest(
+										testOutput, // TODO: check testOutput =
+													// null
+										batchId);
+								resultAll = resultAll && resultTest;
+								if (resultTest) {
+									LOGGER.info(" * OK *");
+								} else {
+									LOGGER.info("## KO ##");
+								}
+								LOGGER.trace("OK");
+							} finally {
+								LOGGER.trace("END");
 							}
 						}
 

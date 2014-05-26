@@ -11,7 +11,6 @@ public abstract class KTestSyntheseGenericFwk {
 	private boolean configured;
 
 	protected SyntheseLoader syntheseLoader;
-	private SyntheseReporter syntheseReporter;
 	protected List<SyntheseReporter> syntheseReporters;
 
 	public void config() throws ConfigurationException {
@@ -22,9 +21,6 @@ public abstract class KTestSyntheseGenericFwk {
 		}
 		if (syntheseReporters == null) {
 			syntheseReporters = new ArrayList<SyntheseReporter>();
-		}
-		if (syntheseReporter != null) {
-			syntheseReporters.add(syntheseReporter);
 		}
 		if (syntheseReporters.size() == 0) {
 			throw new ConfigurationException(
@@ -46,14 +42,6 @@ public abstract class KTestSyntheseGenericFwk {
 
 	public void setSyntheseLoader(SyntheseLoader syntheseLoader) {
 		this.syntheseLoader = syntheseLoader;
-	}
-
-	public SyntheseReporter getSyntheseReporter() {
-		return syntheseReporter;
-	}
-
-	public void setSyntheseReporter(SyntheseReporter syntheseReporter) {
-		this.syntheseReporter = syntheseReporter;
 	}
 
 	public List<SyntheseReporter> getSyntheseReporters() {

@@ -8,9 +8,9 @@ public class ATableInfoFwk {
 
 	private boolean configured;
 
-	protected String ktuSchema;
-	protected String ktuName;
-	private String ktuNamePrefix;
+	protected String ktmSchema;
+	protected String ktmName;
+	private String ktmNamePrefix;
 
 	protected String schema;
 	protected String name;
@@ -27,13 +27,13 @@ public class ATableInfoFwk {
 			throw new ConfigurationException(getClass().getSimpleName()
 					+ ": Parameter name is not configured");
 		}
-		if (ktuSchema == null) {
-			ktuSchema = schema;
+		if (ktmSchema == null) {
+			ktmSchema = schema;
 		}
-		if (ktuNamePrefix != null) {
-			ktuName = ktuNamePrefix + name;
+		if (ktmNamePrefix != null) {
+			ktmName = ktmNamePrefix + name;
 		} else {
-			ktuName = name;
+			ktmName = name;
 		}
 		if (name == null) {
 			throw new ConfigurationException(getClass().getSimpleName()
@@ -83,20 +83,20 @@ public class ATableInfoFwk {
 		this.schema = schema;
 	}
 
-	public String getKtuSchema() {
-		return ktuSchema;
+	public String getKtmSchema() {
+		return ktmSchema;
 	}
 
-	public void setKtuSchema(String ktuSchema) {
-		this.ktuSchema = ktuSchema;
+	public void setKtmSchema(String ktmSchema) {
+		this.ktmSchema = ktmSchema;
 	}
 
-	public String getKtuNamePrefix() {
-		return ktuNamePrefix;
+	public String getKtmNamePrefix() {
+		return ktmNamePrefix;
 	}
 
-	public void setKtuNamePrefix(String ktuNamePrefix) {
-		this.ktuNamePrefix = ktuNamePrefix;
+	public void setKtmNamePrefix(String ktmNamePrefix) {
+		this.ktmNamePrefix = ktmNamePrefix;
 	}
 
 	public boolean getJoinStatus() {

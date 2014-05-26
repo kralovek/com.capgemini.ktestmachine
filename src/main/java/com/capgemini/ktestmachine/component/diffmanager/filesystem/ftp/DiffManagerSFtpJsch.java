@@ -31,7 +31,7 @@ public class DiffManagerSFtpJsch extends ADiffManagerFtpFwk {
 			return item1.getName().compareTo(item2.getName());
 		}
 	};
-	
+
 	private static class Client {
 		private Session session;
 		private ChannelSftp channel;
@@ -81,27 +81,28 @@ public class DiffManagerSFtpJsch extends ADiffManagerFtpFwk {
 		}
 	}
 
-	private Group loadDiff(Client client, DirInfo dirInfo,
-			Group groupState) throws ABaseException {
+	private Group loadDiff(Client client, DirInfo dirInfo, Group groupState)
+			throws ABaseException {
 		LOGGER.trace("BEGIN");
 		try {
 			LOGGER.debug("dir: " + dirInfo.getPath());
-			long date = groupState != null ? groupState.getLastIndex()
-					: 0;
+			long date = groupState != null ? ((IndexImpl) groupState
+					.getLastIndex()).getMs() : 0;
 			List<Item> items = null;
 			if (dirInfo.isContent() && groupState != null
 					&& groupState.getItems() != null) {
 				List<ItemImpl> existingItems = getItems(client,
 						dirInfo.getPath(), dirInfo.getPath(), 0,
 						dirInfo.getPattern());
-				
+
 				items = new ArrayList<Item>();
 
 				for (Item itemState : groupState.getItems()) {
 					ItemImpl existingItem = findItem(existingItems,
 							itemState.getName());
 					if (existingItem != null) {
-						if (existingItem.getIndex() <= itemState.getIndex()) {
+						if (((IndexImpl) existingItem.getIndex()).getMs() <= ((IndexImpl) itemState
+								.getIndex()).getMs()) {
 							existingItems.remove(existingItem);
 						} else {
 							existingItem.setStatus(Status.UPD);
@@ -113,17 +114,20 @@ public class DiffManagerSFtpJsch extends ADiffManagerFtpFwk {
 					}
 				}
 				items.addAll(existingItems);
-				Collections.sort(items, comparatorItem); 
+				Collections.sort(items, comparatorItem);
 			} else {
-				List<ItemImpl> existingItems = getItems(client, dirInfo.getPath(), dirInfo.getPath(),
-						date, dirInfo.getPattern());
+				List<ItemImpl> existingItems = getItems(client,
+						dirInfo.getPath(), dirInfo.getPath(), date,
+						dirInfo.getPattern());
 				items = new ArrayList<Item>();
 				items.addAll(existingItems);
 			}
 
 			long lastModified = getLastModified(items);
 			GroupImpl group = new GroupImpl(dirInfo.getName());
-			group.setLastIndex(lastModified);
+			IndexImpl indexImpl = new IndexImpl();
+			indexImpl.setMs(lastModified);
+			group.setLastIndex(indexImpl);
 			group.getItems().addAll(items);
 			LOGGER.trace("OK");
 			return group;
@@ -145,8 +149,8 @@ public class DiffManagerSFtpJsch extends ADiffManagerFtpFwk {
 		long lastModified = 0;
 		for (Item item : items) {
 			// To je divny ... ta podminka ma byt naopak !!!
-			if (lastModified > item.getIndex()) {
-				lastModified = item.getIndex();
+			if (lastModified > ((IndexImpl) item.getIndex()).getMs()) {
+				lastModified = ((IndexImpl) item.getIndex()).getMs();
 			}
 		}
 		return lastModified;
@@ -183,11 +187,14 @@ public class DiffManagerSFtpJsch extends ADiffManagerFtpFwk {
 				}
 
 				ItemImpl item = new ItemImpl(path);
-				item.setIndex(ms);
+				IndexImpl indexImpl = new IndexImpl();
+				indexImpl.setMs(ms);
+				item.setIndex(indexImpl);
 				item.setStatus(Status.NEW);
 				items.add(item);
 			} else if (file.getAttrs().isDir()) {
-				if (".".equals(file.getFilename()) || "..".equals(file.getFilename())) {
+				if (".".equals(file.getFilename())
+						|| "..".equals(file.getFilename())) {
 					continue;
 				}
 				String path = dir + file.getFilename() + PATH_SEPARATOR;
@@ -198,7 +205,7 @@ public class DiffManagerSFtpJsch extends ADiffManagerFtpFwk {
 		}
 
 		Collections.sort(items, comparatorItem);
-		
+
 		return items;
 	}
 
@@ -243,7 +250,9 @@ public class DiffManagerSFtpJsch extends ADiffManagerFtpFwk {
 					dirInfo.getPath(), dirInfo.getPath(), 0,
 					dirInfo.getPattern());
 			GroupImpl group = new GroupImpl(dirInfo.getName());
-			group.setLastIndex(lastModified);
+			IndexImpl indexImpl = new IndexImpl();
+			indexImpl.setMs(lastModified);
+			group.setLastIndex(indexImpl);
 			LOGGER.trace("OK");
 			return group;
 		} finally {
@@ -251,8 +260,8 @@ public class DiffManagerSFtpJsch extends ADiffManagerFtpFwk {
 		}
 	}
 
-	private static long getLastModifiedDirectory(Client client,
-			String dirRoot, String dir, long lastModified, Pattern pattern)
+	private static long getLastModifiedDirectory(Client client, String dirRoot,
+			String dir, long lastModified, Pattern pattern)
 			throws ABaseException {
 
 		Vector<LsEntry> files = null;
@@ -270,7 +279,7 @@ public class DiffManagerSFtpJsch extends ADiffManagerFtpFwk {
 		for (LsEntry file : files) {
 			if (!file.getAttrs().isDir()) {
 				LOGGER.debug("file: " + file.getFilename());
-				
+
 				String path = adaptPath(dirRoot, dir + file.getFilename());
 				if (pattern != null && !pattern.matcher(path).matches()) {
 					LOGGER.debug("Ignored file: " + file);

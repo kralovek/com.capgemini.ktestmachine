@@ -8,7 +8,7 @@ import com.capgemini.ktestmachine.component.diffmanager.DiffManager.Item;
 
 public class GroupImpl implements Group, Comparable<Group> {
 	private String name;
-	private long lastIndex;
+	private IndexImpl lastIndex;
 	private List<Item> items = new ArrayList<Item>();
 
 	public GroupImpl(String name) {
@@ -19,11 +19,11 @@ public class GroupImpl implements Group, Comparable<Group> {
 		return name;
 	}
 
-	public long getLastIndex() {
+	public IndexImpl getLastIndex() {
 		return lastIndex;
 	}
 
-	public void setLastIndex(long lastIndex) {
+	public void setLastIndex(IndexImpl lastIndex) {
 		this.lastIndex = lastIndex;
 	}
 
